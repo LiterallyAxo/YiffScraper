@@ -84,10 +84,7 @@ def display_title():
 # Display menu
 def display_menu():
     display_title()
-    # print("\n\n") causes errors with pylint so this is replacing it
-    print("""
-
-""")
+    print("\n\n") 
     table = Box.DoubleCube("[1] Start\n[2] Exit")
     print(Center.XCenter(table))
 
