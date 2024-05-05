@@ -9,6 +9,7 @@ Welcome to YiffScraper, an asynchronous, multi-threaded image scraper dedicated 
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contribution](#contribution)
+- [Licence](#license)
 
 ## Overview
 
@@ -36,13 +37,20 @@ Navigate to releases and download the latest EXE file to run, or to run from sou
 2. **Install Dependencies**
    Navigate to the cloned repository and install the necessary Python packages:
    ```shell
-   pip install aiohttp aiofiles asyncio Pillow colorama pystyle
+   pip install -r requirements.txt
    ```
    
 3. **Run the Script**
    Launch the scraper using Python:
+
+   Windows:
    ```shell
    python main.py
+   ```
+
+   Linux:
+   ```bash
+   python3 main.py
    ```
    
 ## Usage
