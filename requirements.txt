@@ -1,0 +1,6 @@
+aiohttp 
+aiofiles 
+asyncio 
+Pillow 
+colorama 
+pystyle

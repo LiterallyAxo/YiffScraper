@@ -1,4 +1,13 @@
-import aiohttp
+"""
+Python to download images from e621.net
+Takes tags and number of images to download as input
+Outputs to ./Folders
+"""
+
+# Import packages
+import random
+import tkinter as tk
+from tkinter import filedialog
 import aiofiles
 import asyncio
 from aiohttp import ClientSession
@@ -9,42 +18,51 @@ from colorama import Fore, Style, init
 from pystyle import Center, Box
 import io
 from PIL import Image
-import random
 
+
+# Initialise colorama for colored output
 init(autoreset=True)
 
 HEADERS = {'User-Agent': 'YiffScraper V3.0 (by axo!)'}
 BASE_URL = "https://e621.net/posts.json?tags=order:random+limit:{}"
 
+# Function to log messages with color and timestamp
 def log(level, color, message, thread_num=None):
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
     thread_info = f"[Thread {thread_num}]" if thread_num is not None else ""
     print(f"{Fore.LIGHTBLACK_EX}[{timestamp}] {Fore.WHITE}{thread_info} {color}[{level.upper()}]{Style.RESET_ALL} {message}")
 
+# Log Info blue
 def log_info(message, thread_num=None):
     log("info", Fore.LIGHTBLUE_EX, message, thread_num)
 
+# Log Error red
 def log_error(message, thread_num=None):
     log("error", Fore.LIGHTRED_EX, message, thread_num)
 
+# Log Input cyan
 def log_input(message):
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
     return input(f"{Fore.LIGHTBLACK_EX}[{timestamp}] {Fore.CYAN}[INPUT] {message} {Fore.CYAN}>> {Fore.WHITE}")
 
+# Log Success green
 def log_success(message, thread_num=None):
     log("success", Fore.LIGHTGREEN_EX, message, thread_num)
 
+# Log Debug magenta
 def log_debug(message, debug, thread_num=None):
     if debug:
         log("debug", Fore.LIGHTMAGENTA_EX, message, thread_num)
 
+# Function to clear the screen
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+# Function to display the title
 def display_title():
     title = """
 
-                                                              ⠀⠀
+    ⠀
   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡘⣈⠓⠬⢑⡢⣄⠠⠤⠚⡷⡄⠀⠀                                  
   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢃⡇⢵⠀⠀⠈⠁⠀⠀⠀⠒⢅⠀⠀                                  
   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣷⡔⠥⡃⠀⠀⠀⣤⣤⣼⠋⢢⣤      ■■■■■■■■■■■■■■■■■■■■■■■■■   
@@ -63,9 +81,10 @@ def display_title():
 """
     print(Center.XCenter(title))
 
+# Display menu
 def display_menu():
     display_title()
-    print("\n\n")
+    print("\n\n") 
     table = Box.DoubleCube("[1] Start\n[2] Exit")
     print(Center.XCenter(table))
 
@@ -74,8 +93,9 @@ def is_image_valid(file_path):
         with Image.open(file_path) as img:
             img.verify()
         return True
-    except Exception:
+    except (IOError, SyntaxError):
         return False
+    return False
 
 async def download_file(sem, count, file_url, post_id, session, debug, thread_num, download_folder):
     async with sem:
@@ -87,8 +107,8 @@ async def download_file(sem, count, file_url, post_id, session, debug, thread_nu
                     file_ext = file_url.split('.')[-1]
                     file_name = f"{post_id}.{file_ext}"
                     log_debug(f"File name determined: {file_name}", debug, thread_num)
-                    
-                    file_data_in_ram = io.BytesIO(await response.read())  
+
+                    file_data_in_ram = io.BytesIO(await response.read())
                     log_debug(f"File data stored in RAM", debug, thread_num)
 
                     if file_ext in ["png", "jpg", "jpeg"]:
@@ -103,9 +123,9 @@ async def download_file(sem, count, file_url, post_id, session, debug, thread_nu
                         log_debug("Writing to disk...", debug, thread_num)
 
                     async with aiofiles.open(f"Folders/{download_folder}/{file_name}", mode='wb') as f:
-                        await f.write(file_data_in_ram.getvalue())  
+                        await f.write(file_data_in_ram.getvalue())
                         log_debug(f"File {file_name} written to disk", debug, thread_num)
-                        
+
                     log_success(f"File {count} downloaded: {file_name}", thread_num)
                 else:
                     log_error(f"No file {count} to download. Server replied HTTP code: {response.status}", thread_num)
@@ -148,11 +168,17 @@ async def start_scraper(tags, amount, debug, thread_limit, download_folder):
         clear_screen()
         display_title()
         zip_choice = log_input("Would you like to zip the downloaded files? (y/n)")
+
         if zip_choice.lower() == 'y':
+            encrypt_choice = log_input("Would you like to encrypt the downloaded files? (y/n)")
             log_debug("Zipping downloaded files", debug)
             zip_folder(f"Folders/{download_folder}", f"Folders/{download_folder}.zip")
             log_success("Zipped")
-            # TODO add an encryption mechanism
+            if encrypt_choice.lower() == 'y':
+                log_debug("Encrypting downloaded files", debug)
+                passkey = log_input("Enter a passkey for encryption")
+                encrypt_zip_file(download_folder, download_folder, passkey)
+                log_success("Encrypted")
 
 async def get_json(url, session, debug, thread_num):
     log_debug(f"Sending GET request to {url}", debug, thread_num)
@@ -172,6 +198,34 @@ def zip_folder(src_folder, dest_zip_file):
             for filename in filenames:
                 zipf.write(os.path.join(foldername, filename), os.path.relpath(os.path.join(foldername, filename), src_folder))
 
+def encrypt_zip_file(src_folder, dest_zip_file, passkey):
+    # Step 2: Encrypt the downloaded files
+    encrypted_folder = f"Folders/{src_folder}_encrypted"
+    os.makedirs(encrypted_folder, exist_ok=True)
+    for foldername, subfolders, filenames in os.walk(f"Folders/{src_folder}"):
+        for filename in filenames:
+            file_path = os.path.join(foldername, filename)
+            encrypted_file_path = os.path.join(encrypted_folder, filename)
+            with open(file_path, 'rb') as file:
+                data = file.read()
+
+            # replace with actual encryption
+            encrypted_data = data
+
+            with open(encrypted_file_path, 'wb') as encrypted_file:
+                encrypted_file.write(encrypted_data)
+
+    # Step 3: Delete the original downloaded files
+    for foldername, subfolders, filenames in os.walk(f"Folders/{src_folder}"):
+        for filename in filenames:
+            file_path = os.path.join(foldername, filename)
+            os.remove(file_path)
+
+    # Step 4: Rename the encrypted folder to the original download folder name
+    os.rename(encrypted_folder, f"Folders/{src_folder}")
+    # Step 5: Zip the encrypted folder
+    zip_folder(f"Folders/{src_folder}", f"Folders/{dest_zip_file}.zip")
+
 async def check_e621_status(debug):
     log_info("Checking if E621 is up...")
     async with ClientSession() as session:
@@ -182,9 +236,6 @@ async def check_e621_status(debug):
         except Exception as e:
             log_error(str(e))
             return False
-
-import tkinter as tk
-from tkinter import filedialog
 
 async def main():
     clear_screen()
@@ -245,7 +296,7 @@ async def main():
 
             tags = []
             tag_choice = log_input("Do you want to [1] Enter tags manually, [2] Build tags, or [3] Load tags from a file?")
-            
+
             if tag_choice == "1":
                 tags_input = log_input("Enter your tags (separated by spaces)")
                 tags = tags_input.replace(" ", "+")
@@ -279,7 +330,7 @@ async def main():
                             gen = 'male/female male female'
                         elif g == 5:
                             gen = log_input("Enter the type of genders you want to see (e.g male/female or male/male or intersex/female). or press enter to skip.")
-                        
+
                         if g in gender_subtype_questions:
                             subtype = log_input(gender_subtype_questions[g])
                             try:
@@ -298,13 +349,13 @@ async def main():
                                         gen = f"{gen} transgender"
                                     elif subtype == 3:
                                         gen = f"{gen} girly"
-                                    
+
                             except ValueError:
                                 log_info("Using no gender tag.")
-                        
+
                         tags_input += gen + " "
                         log_debug(tags_input, debug)
-                        
+
                 except ValueError:
                     log_info("Using no gender tag.")
 
@@ -333,8 +384,6 @@ async def main():
                 tags = tags_input.replace(' ', '+')
                 log_debug(f"Formatted: {tags}", debug)
 
-                            
-                
                 save_choice = log_input("Do you want to save these tags for future use? (y/n)")
                 if save_choice.lower() == 'y':
                     save_tags_to_file(tags)
@@ -348,7 +397,7 @@ async def main():
                 continue
 
             os.makedirs(f"Folders/{download_folder}", exist_ok=True)
-        
+
             await start_scraper(tags, amount, debug, thread_limit, download_folder)
 
 asyncio.run(main())

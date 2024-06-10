@@ -9,6 +9,7 @@ Welcome to YiffScraper, an asynchronous, multi-threaded image scraper dedicated 
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contribution](#contribution)
+- [Licence](#license)
 
 ## Overview
 
@@ -30,19 +31,26 @@ Navigate to releases and download the latest EXE file to run, or to run from sou
 
 1. **Clone the Repository**
    ```shell
-   git clone https://github.com/LiterallyAnAxolotl/YiffScraper.git
+   git clone https://github.com/LiterallyAxo/YiffScraper.git
    ```
    
 2. **Install Dependencies**
    Navigate to the cloned repository and install the necessary Python packages:
    ```shell
-   pip install aiohttp aiofiles asyncio Pillow colorama pystyle
+   pip install -r requirements.txt
    ```
    
 3. **Run the Script**
    Launch the scraper using Python:
+
+   Windows:
    ```shell
    python main.py
+   ```
+
+   Linux:
+   ```bash
+   python3 main.py
    ```
    
 ## Usage
@@ -64,8 +72,6 @@ The tag builder assists in constructing a tag string based on your preferences, 
 ## Contribution
 
 Contributions are welcomed! Feel free to fork the repository and submit your pull requests. For major changes, kindly open an issue first to discuss what you'd like to modify.
-
-## License
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
