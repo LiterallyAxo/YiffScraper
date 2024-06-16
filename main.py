@@ -2,6 +2,7 @@
 Python to download images from e621.net
 Takes tags and number of images to download as input
 Outputs to ./Folders
+I love you whoever is reading this
 """
 
 # Import packages
